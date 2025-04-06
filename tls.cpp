@@ -8,6 +8,10 @@
 
 int tls_size = 0;
 
+#define align_size 4
+
+#define max(a,b) ((a)>(b)?(a):(b))
+
 template <typename T> struct tls 
 {
 	int offset;
@@ -15,20 +19,30 @@ template <typename T> struct tls
 	tls()
 	{
 		offset = tls_size;
-		tls_size += sizeof(T);
+		tls_size += max(sizeof(T),align_size);
 	}
 
-	T Equals()
+	// Implicit convertion to T
+	operator T() const
 	{
 		struct Task *me = FindTask(NULL);
 		T *var = (T *) ((char *) me -> tc_UserData + offset) ;
 		return *var;
 	}
 
-	T operator() () // This one is not working...
+	// Also useful: regernce acccess.
+	int &operator()()
 	{
-		printf("get\n");
-		return 10;
+		struct Task *me = FindTask(NULL);
+		T *var = (T *) ((char *) me -> tc_UserData + offset) ;
+		return *var;
+	}
+
+	T *operator&()
+	{
+		struct Task *me = FindTask(NULL);
+		T *var = (T *) ((char *) me -> tc_UserData + offset) ;
+		return var;
 	}
 
 	bool operator==(T &other)
@@ -88,23 +102,21 @@ template <typename T> struct tls
 		T *var = (T *) ((char *) me -> tc_UserData + offset) ;
 		*var -= value;	
 	}
-
-	T *operator&()
-	{
-		struct Task *me = FindTask(NULL);
-		T *var = (T *) ((char *) me -> tc_UserData + offset) ;
-		return var;
-	}
 };
 
 tls<int> hello ;
 tls<char> dick;
 
+void assert_value( const char *description, int output, int expected )
+{
+	printf( "%s: %s\n",description,  (output == expected) ? "Success" : "Failed");
+}
+
 int main()
 {
 	struct Task *me;
 
-	printf("count tls: %ld\n", tls_size);
+	printf("size of tls buffer: %ld\n", tls_size);
 
 	me = FindTask(NULL);
 
@@ -112,12 +124,10 @@ int main()
 
 	dick = 2;
 	hello = 4;
-
 	hello += 2;
 
-	printf("Has value: %ld\n", hello);
-
-	printf("%ld\n", *((int *) &hello));
+	assert_value( "objcet should return a integer value", hello, 6 );
+	assert_value( "reference of object should return a correct address, and give expected value", *((int *) &hello), 6);
 
 	printf("%ld\n", *((char *) &dick));
 
