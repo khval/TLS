@@ -10,4 +10,4 @@ Also because they created as templates, I believe they are static. It can be a g
 
 On the main process you cannot set up TLS before, the main function, but it is easy to make wrapper, for that. if program calls Exit(), you should setup the process death function, but if it does not, you can just free TLS buffer at end of the process.
 
-The new TLS buffer can be passed to NewProccesTags(), there is way you can allocate it before it’s called, just remember to free it, if NewProcessTags failed.. as this implementation does not cover that part. (In that case it’s up to you if copy or clear the new TLS.)
+The new TLS buffer can be passed to NewProccesTags(), there is way you can allocate it before it’s called, just remember to free it, if NewProcessTags failed.. as this implementation does not cover that part. (In that case it’s up to you if you copy or clear the new TLS.)
